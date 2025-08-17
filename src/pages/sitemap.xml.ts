@@ -3,7 +3,8 @@ import { getClinics, getStatesWithClinics } from '../lib/supabase';
 import { allProducts } from '../lib/products';
 
 export const GET: APIRoute = async () => {
-  const baseUrl = 'https://hyperhidrosis-directory.netlify.app';
+  // Use the current site URL or fallback
+  const baseUrl = import.meta.env.SITE || 'https://hyperhidrosis-directory.netlify.app';
   
   // Get dynamic data
   const clinics = await getClinics();

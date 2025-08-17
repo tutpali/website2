@@ -11,7 +11,17 @@ function isSupabaseConfigured(): boolean {
 const supabaseUrl = import.meta.env.SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const supabase = supabaseUrl && supabaseKey 
+// Validate URLs before creating client
+function isValidUrl(string: string): boolean {
+  try {
+    new URL(string);
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+export const supabase = supabaseUrl && supabaseKey && isValidUrl(supabaseUrl)
   ? createClient(supabaseUrl, supabaseKey)
   : null;
 

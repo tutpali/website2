@@ -17,6 +17,10 @@ const {
 } = Astro.props;
 
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+// Ensure we have a valid site URL
+const siteUrl = Astro.site?.toString() || 'http://localhost:4321';
+const safeCanonicalURL = new URL(Astro.url.pathname, siteUrl);
 ---
 
 <!DOCTYPE html>
@@ -30,18 +34,18 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
   <meta name="generator" content={Astro.generator} />
   
   <!-- Canonical URL -->
-  <link rel="canonical" href={canonicalURL} />
+  <link rel="canonical" href={safeCanonicalURL} />
   
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
-  <meta property="og:url" content={canonicalURL} />
+  <meta property="og:url" content={safeCanonicalURL} />
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:image" content={ogImage} />
   
   <!-- Twitter -->
   <meta property="twitter:card" content="summary_large_image" />
-  <meta property="twitter:url" content={canonicalURL} />
+  <meta property="twitter:url" content={safeCanonicalURL} />
   <meta property="twitter:title" content={title} />
   <meta property="twitter:description" content={description} />
   <meta property="twitter:image" content={ogImage} />
