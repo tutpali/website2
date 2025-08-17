@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+
+import { supabase } from '../lib/supabase';
+
+// Get raw data from Supabase
+const { data: rawClinics, error } = await supabase
+  .from('clinics')
+  .select('*')
+  .limit(50); // Limit to first 50 for easier viewing
+
+const { data: stateData, error: stateError } = await supabase
+  .from('clinics')
+  .select('State')
+  .not('State', 'is', null);
+
+// Get unique states
+const uniqueStates = [...new Set(stateData?.map(clinic => clinic.State) || [])];
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Test Data</title>
+  <style>
+    body { font-family: monospace; padding: 20px; }
+    .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+    .error { color: red; }
+    .success { color: green; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>Supabase Raw Data Test</h1>
+  
+  <div class="section">
+    <h2>Connection Status</h2>
+    {error ? (
+      <div class="error">❌ Error: {error.message}</div>
+    ) : (
+      <div class="success">✅ Connected successfully</div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>Total Records</h2>
+    <p>Found {rawClinics?.length || 0} clinic records (showing first 50)</p>
+  </div>
+
+  <div class="section">
+    <h2>State Data Analysis</h2>
+    {stateError ? (
+      <div class="error">❌ State Error: {stateError.message}</div>
+    ) : (
+      <div>
+        <p>Total state records: {stateData?.length || 0}</p>
+        <p>Unique states found: {uniqueStates.length}</p>
+        <h3>All Unique States:</h3>
+        <pre>{JSON.stringify(uniqueStates.sort(), null, 2)}</pre>
+      </div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>Sample Clinic Records (First 10)</h2>
+    <pre>{JSON.stringify(rawClinics?.slice(0, 10), null, 2)}</pre>
+  </div>
+
+  <div class="section">
+    <h2>State Distribution</h2>
+    {stateData && (
+      <pre>{JSON.stringify(
+        stateData.reduce((acc, clinic) => {
+          const state = clinic.State;
+          acc[state] = (acc[state] || 0) + 1;
+          return acc;
+        }, {}),
+        null, 2
+      )}</pre>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>Raw State Values (First 50)</h2>
+    <pre>{JSON.stringify(stateData?.slice(0, 50).map(c => `"${c.State}"`), null, 2)}</pre>
+  </div>
+</body>
+</html>

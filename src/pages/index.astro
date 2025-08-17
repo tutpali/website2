@@ -1,0 +1,330 @@
+---
+import Layout from '../layouts/Layout.astro';
+import ClinicCard from '../components/ClinicCard.astro';
+import ProductCard from '../components/ProductCard.astro';
+import { getProductsByCategory } from '../lib/products';
+import { getClinics, getStatesWithClinics, getAllStates } from '../lib/supabase';
+
+// Get a diverse mix of clinics from different states
+const allClinicsData = await getClinics();
+const clinicsByState = allClinicsData.reduce((acc, clinic) => {
+  if (!acc[clinic.State]) acc[clinic.State] = [];
+  acc[clinic.State].push(clinic);
+  return acc;
+}, {} as Record<string, typeof allClinicsData>);
+
+// Get one clinic from each of 6 different states for diversity
+const featuredClinics = Object.keys(clinicsByState)
+  .slice(0, 6)
+  .map(state => clinicsByState[state][0])
+  .filter(Boolean);
+const states = await getStatesWithClinics();
+const allStates = await getAllStates();
+const featuredProducts = getProductsByCategory('individual').slice(0, 3);
+const comboPackages = getProductsByCategory('combo');
+
+---
+
+<Layout title="HyperCare - Find the Best Hyperhidrosis Treatment Specialists">
+  <!-- Free Shipping Banner -->
+  <div class="bg-red-500 text-white text-center py-2 font-bold text-sm">
+    🚚 FREE SHIPPING ON ALL ORDERS OVER $25! 
+  </div>
+
+  <!-- Hero Section -->
+  <section class="bg-white py-16">
+    <div class="container">
+      <div class="max-w-4xl mx-auto text-center">
+        <!-- Reviews Badge -->
+        <div class="flex items-center justify-center mb-6">
+          <div class="flex items-center">
+            {Array.from({ length: 5 }, (_, i) => (
+              <svg key={i} class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ))}
+            <span class="ml-2 text-gray-600 font-medium">4.8/5 • 2,500+ Reviews</span>
+          </div>
+        </div>
+
+        <h1 class="text-4xl md:text-6xl font-heading font-bold text-gray-900 mb-6">
+          Stop Embarrassing <span class="text-red-500">Sweat</span>
+        </h1>
+        <p class="text-xl text-gray-600 mb-8">
+          Clinically proven antiperspirants and sweat solutions. Get confidence back with products that actually work.
+        </p>
+        
+        <!-- CTA Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-8">
+          <a href="/products" class="bg-red-500 text-white px-12 py-4 rounded-lg hover:bg-red-600 transition-colors font-bold text-lg uppercase tracking-wide">
+            SHOP ALL
+          </a>
+          <a href="/directory" class="bg-white text-red-500 border-2 border-red-500 px-8 py-4 rounded-lg hover:bg-red-50 transition-colors font-medium text-lg">
+            Find Clinics
+          </a>
+        </div>
+
+        <!-- Trust Indicators -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-500">
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Dermatologist Tested
+          </div>
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"/>
+            </svg>
+            30-Day Money Back
+          </div>
+          <div class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.293 2.293c-.63.63-.184 1.707.707 1.707H19M17 21a2 2 0 100-4 2 2 0 000 4zM9 21a2 2 0 100-4 2 2 0 000 4z"/>
+            </svg>
+            Free Shipping $25+
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Products Section -->
+  <section class="py-16 bg-gray-50">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Our Best-Selling Products</h2>
+        <p class="text-lg text-gray-600">Thousands of customers trust our clinically proven formulas</p>
+      </div>
+      
+      <!-- Individual Products -->
+      <div class="mb-16">
+        <h3 class="text-2xl font-heading font-semibold text-gray-900 mb-8 text-center">Top Rated Solutions</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {featuredProducts.map((product) => (
+            <ProductCard product={product} />
+          ))}
+        </div>
+      </div>
+
+      <!-- Combo Packages -->
+      <div>
+        <h3 class="text-2xl font-heading font-semibold text-gray-900 mb-8 text-center">Save with Combo Packages</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {comboPackages.map((product) => (
+            <ProductCard product={product} isCombo={true} />
+          ))}
+        </div>
+      </div>
+      
+      <div class="text-center mt-12">
+        <a href="/products" class="bg-red-500 text-white px-12 py-4 rounded-lg hover:bg-red-600 transition-colors font-bold text-lg uppercase tracking-wide">
+          Shop All Products
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Find Clinics Section -->
+  <section class="py-16 bg-white border-t-4 border-red-500">
+    <div class="container">
+      <div class="text-center mb-12">
+        <div class="inline-block bg-red-100 text-red-600 px-4 py-2 rounded-full text-sm font-bold mb-4">
+          BONUS: FREE DIRECTORY
+        </div>
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Need Professional Treatment Too?</h2>
+        <p class="text-lg text-gray-600">Find qualified specialists in your area - completely free as our bonus to you</p>
+      </div>
+      
+      <!-- Location Finder -->
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl border-4 border-primary-200">
+          <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">🔍 Find Clinics by Location</h3>
+          
+          <!-- Dropdowns -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <label for="stateSelectMain" class="block text-lg font-bold text-gray-800 mb-4">📍 Select State</label>
+              <select id="stateSelectMain" class="w-full px-6 py-4 text-lg border-3 border-gray-400 rounded-xl focus:ring-4 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 text-black">
+                <option value="" class="text-black">Choose a state...</option>
+                {allStates.map(state => (
+                  <option value={state} class="text-black">{state}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label for="citySelectMain" class="block text-lg font-bold text-gray-800 mb-4">🏙️ Select City</label>
+              <select id="citySelectMain" class="w-full px-6 py-4 text-lg border-3 border-gray-400 rounded-xl focus:ring-4 focus:ring-primary-500 focus:border-primary-500 bg-gray-50 text-black" disabled>
+                <option value="" class="text-black">First select a state...</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Find Button -->
+          <button id="findClinicsBtnMain" class="w-full bg-red-500 text-white py-5 px-8 rounded-xl hover:bg-red-600 transition-all duration-300 font-bold text-xl shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+            🚀 Find Clinics Now
+          </button>
+        </div>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- How It Works -->
+  <section class="py-16 bg-gray-50">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Why Choose HyperCare?</h2>
+        <p class="text-lg text-gray-600">The complete solution for excessive sweating</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-red-500 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Proven Products</h3>
+          <p class="text-gray-600">Clinically tested antiperspirants and solutions that actually work for excessive sweating.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-red-500 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Free Specialist Directory</h3>
+          <p class="text-gray-600">Bonus access to our directory of qualified hyperhidrosis specialists nationwide.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-red-500 text-white w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Complete Support</h3>
+          <p class="text-gray-600">30-day money-back guarantee, free shipping, and customer support that cares.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials -->
+  <section class="py-16 bg-white">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Success Stories</h2>
+        <p class="text-lg text-gray-600">Real results from real people</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="bg-gray-50 rounded-lg p-6">
+          <div class="flex items-center mb-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <svg key={i} class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ))}
+          </div>
+          <p class="text-gray-600 mb-4">"HyperCare helped me find an amazing specialist in my area. After years of struggling with excessive sweating, I finally found effective treatment!"</p>
+          <div class="font-semibold text-gray-900">- Sarah M.</div>
+          <div class="text-sm text-gray-500">California</div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6">
+          <div class="flex items-center mb-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <svg key={i} class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ))}
+          </div>
+          <p class="text-gray-600 mb-4">"The products really work! Combined with professional treatment, I now have complete confidence in social situations."</p>
+          <div class="font-semibold text-gray-900">- Mike R.</div>
+          <div class="text-sm text-gray-500">Texas</div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-6">
+          <div class="flex items-center mb-4">
+            {Array.from({ length: 5 }, (_, i) => (
+              <svg key={i} class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            ))}
+          </div>
+          <p class="text-gray-600 mb-4">"Life-changing results! The directory made it so easy to find qualified doctors, and the 15% discount was a nice bonus."</p>
+          <div class="font-semibold text-gray-900">- Jessica L.</div>
+          <div class="text-sm text-gray-500">Florida</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  // Hero section dropdowns
+  const stateSelectMain = document.getElementById('stateSelectMain') as HTMLSelectElement;
+  const citySelectMain = document.getElementById('citySelectMain') as HTMLSelectElement;
+  const findClinicsBtnMain = document.getElementById('findClinicsBtnMain') as HTMLButtonElement;
+
+  // Function to handle state selection
+  async function handleStateChange(stateSelectEl: HTMLSelectElement, citySelectEl: HTMLSelectElement, findBtnEl: HTMLButtonElement) {
+    const selectedState = stateSelectEl.value;
+    
+    if (!selectedState) {
+      citySelectEl.disabled = true;
+      citySelectEl.innerHTML = '<option value="">First select a state...</option>';
+      findBtnEl.disabled = true;
+      return;
+    }
+
+    // Fetch cities for the selected state
+    try {
+      const response = await fetch(`/api/cities?state=${encodeURIComponent(selectedState)}`);
+      const cities = await response.json();
+      
+      citySelectEl.innerHTML = '<option value="">All cities in ' + selectedState + '</option>';
+      cities.forEach((city: {city: string, count: number}) => {
+        const option = document.createElement('option');
+        option.value = city.city;
+        option.textContent = `${city.city} (${city.count} clinic${city.count !== 1 ? 's' : ''})`;
+        citySelectEl.appendChild(option);
+      });
+      
+      citySelectEl.disabled = false;
+      findBtnEl.disabled = false;
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+      citySelectEl.innerHTML = '<option value="">Error loading cities</option>';
+    }
+  }
+
+  // Function to handle find clinics button click
+  function handleFindClinics(stateSelectEl: HTMLSelectElement, citySelectEl: HTMLSelectElement) {
+    const selectedState = stateSelectEl.value;
+    const selectedCity = citySelectEl.value;
+    
+    if (selectedState) {
+      const stateSlug = selectedState.toLowerCase().replace(/\s+/g, '-');
+      if (selectedCity) {
+        const citySlug = selectedCity.toLowerCase().replace(/\s+/g, '-');
+        window.location.href = `/directory/${stateSlug}/${citySlug}`;
+      } else {
+        window.location.href = `/directory/${stateSlug}`;
+      }
+    }
+  }
+
+  // Main section event listeners
+  stateSelectMain?.addEventListener('change', () => {
+    handleStateChange(stateSelectMain, citySelectMain, findClinicsBtnMain);
+  });
+
+  findClinicsBtnMain?.addEventListener('click', () => {
+    handleFindClinics(stateSelectMain, citySelectMain);
+  });
+</script>

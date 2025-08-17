@@ -1,0 +1,276 @@
+---
+export const prerender = false;
+
+import { supabase } from '../lib/supabase';
+
+// Try to get schema information
+let tablesInfo = null;
+let clinicsData = null;
+let usersData = null;
+let rawError = null;
+
+try {
+  // Get all tables in the public schema
+  const { data: tables, error: tablesError } = await supabase
+    .rpc('get_schema_info')
+    .catch(() => ({ data: null, error: 'RPC not available' }));
+
+  // Get clinics data
+  const { data: clinics, error: clinicsError } = await supabase
+    .from('clinics')
+    .select('*')
+    .limit(10);
+
+  // Get users data  
+  const { data: users, error: usersError } = await supabase
+    .from('users')
+    .select('*')
+    .limit(5);
+
+  clinicsData = { data: clinics, error: clinicsError };
+  usersData = { data: users, error: usersError };
+
+  // Try to get table names by attempting to query common table names
+  const tableTests = ['clinics', 'users', 'clinic', 'user', 'doctors', 'providers'];
+  const availableTables = [];
+
+  for (const tableName of tableTests) {
+    try {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .limit(1);
+      
+      if (!error && data !== null) {
+        availableTables.push({
+          name: tableName,
+          hasData: data.length > 0,
+          sampleRecord: data[0] || null
+        });
+      }
+    } catch (e) {
+      // Table doesn't exist, skip
+    }
+  }
+
+  tablesInfo = availableTables;
+
+} catch (error) {
+  rawError = error;
+}
+
+// Get column information for clinics table specifically
+let clinicsColumns = null;
+try {
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('*')
+    .limit(1);
+  
+  if (data && data.length > 0) {
+    clinicsColumns = Object.keys(data[0]);
+  }
+} catch (e) {
+  // Handle error
+}
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Complete Supabase Debug - All Tables & Data</title>
+  <style>
+    body { 
+      font-family: monospace; 
+      padding: 20px; 
+      background: #f0f0f0;
+      line-height: 1.5;
+    }
+    .section { 
+      margin: 20px 0; 
+      padding: 20px; 
+      border: 3px solid #333; 
+      background: white;
+      border-radius: 10px;
+    }
+    .error { color: red; font-weight: bold; background: #ffe6e6; padding: 10px; border-radius: 5px; }
+    .success { color: green; font-weight: bold; background: #e6ffe6; padding: 10px; border-radius: 5px; }
+    .warning { color: orange; font-weight: bold; background: #fff3e6; padding: 10px; border-radius: 5px; }
+    pre { 
+      background: #f8f8f8; 
+      padding: 15px; 
+      overflow-x: auto; 
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      max-height: 500px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+    .table-card {
+      background: #e8f4fd;
+      padding: 15px;
+      border-radius: 8px;
+      border: 2px solid #b3d9ff;
+      margin: 10px 0;
+    }
+    .highlight { 
+      background: yellow; 
+      padding: 3px 6px; 
+      border-radius: 3px;
+      font-weight: bold;
+    }
+    h1 { 
+      color: #333; 
+      border-bottom: 4px solid #333; 
+      padding-bottom: 15px;
+      font-size: 24px;
+    }
+    h2 { 
+      color: #666; 
+      border-bottom: 2px solid #666; 
+      padding-bottom: 8px;
+      font-size: 18px;
+    }
+    .stats { 
+      background: #e8f5e8; 
+      padding: 20px; 
+      border-radius: 10px; 
+      margin: 15px 0;
+      border: 3px solid #4caf50;
+    }
+    .columns-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .column-item {
+      background: #f0f8ff;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #cce7ff;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Complete Supabase Database Debug</h1>
+  
+  <div class="section">
+    <h2>🔌 Connection Status</h2>
+    {rawError ? (
+      <div class="error">❌ Connection Error: {rawError.message}</div>
+    ) : (
+      <div class="success">✅ Supabase connection successful</div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>📋 Available Tables</h2>
+    {tablesInfo ? (
+      <div>
+        <div class="stats">
+          <strong>Found {tablesInfo.length} accessible tables</strong>
+        </div>
+        {tablesInfo.map((table, index) => (
+          <div key={index} class="table-card">
+            <h3>📊 Table: <span class="highlight">{table.name}</span></h3>
+            <p>Has Data: <strong>{table.hasData ? '✅ Yes' : '❌ No'}</strong></p>
+            {table.sampleRecord && (
+              <div>
+                <h4>Sample Record Structure:</h4>
+                <pre>{JSON.stringify(table.sampleRecord, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div class="warning">⚠️ Could not retrieve table information</div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>🏥 Clinics Table Analysis</h2>
+    {clinicsData?.error ? (
+      <div class="error">❌ Clinics Error: {clinicsData.error.message}</div>
+    ) : (
+      <div>
+        <div class="success">✅ Clinics table accessible</div>
+        <div class="stats">
+          <strong>Sample Records: {clinicsData?.data?.length || 0}</strong>
+        </div>
+        
+        {clinicsColumns && (
+          <div>
+            <h3>📝 All Columns in Clinics Table:</h3>
+            <div class="columns-list">
+              {clinicsColumns.map((col, index) => (
+                <div key={index} class="column-item">{col}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {clinicsData?.data && clinicsData.data.length > 0 && (
+          <div>
+            <h3>🔍 Sample Clinic Records:</h3>
+            <pre>{JSON.stringify(clinicsData.data, null, 2)}</pre>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>👥 Users Table Analysis</h2>
+    {usersData?.error ? (
+      <div class="error">❌ Users Error: {usersData.error.message}</div>
+    ) : (
+      <div>
+        <div class="success">✅ Users table accessible</div>
+        <div class="stats">
+          <strong>Sample Records: {usersData?.data?.length || 0}</strong>
+        </div>
+        
+        {usersData?.data && usersData.data.length > 0 && (
+          <div>
+            <h3>🔍 Sample User Records:</h3>
+            <pre>{JSON.stringify(usersData.data, null, 2)}</pre>
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>🔧 Troubleshooting Guide</h2>
+    <div style="background: #fff3cd; padding: 20px; border-radius: 10px; border: 2px solid #ffeaa7;">
+      <h3>🎯 What to Check:</h3>
+      <ol>
+        <li><strong>Table Names:</strong> Are we querying the right table name?</li>
+        <li><strong>Column Names:</strong> Does the 'State' column exist and have the right name?</li>
+        <li><strong>Data Structure:</strong> Are the records structured as expected?</li>
+        <li><strong>Permissions:</strong> Can we read all the data we need?</li>
+      </ol>
+      
+      <h3>🔍 Next Steps:</h3>
+      <ul>
+        <li>Check if 'State' column exists in clinics table</li>
+        <li>Verify column names match our code expectations</li>
+        <li>Look at sample records to understand data format</li>
+        <li>Check if there are case sensitivity issues</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Navigation</h2>
+    <p>
+      <a href="/" style="color: #007bff; text-decoration: none; font-weight: bold; margin-right: 20px;">← Back to Homepage</a>
+      <a href="/directory" style="color: #007bff; text-decoration: none; font-weight: bold; margin-right: 20px;">View Directory</a>
+      <a href="/debug-supabase" style="color: #007bff; text-decoration: none; font-weight: bold;">Original Debug Page</a>
+    </p>
+  </div>
+</body>
+</html>

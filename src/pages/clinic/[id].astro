@@ -1,0 +1,270 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import { getClinicById } from '../../lib/supabase';
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/directory');
+}
+
+const clinic = await getClinicById(parseInt(id));
+
+if (!clinic) {
+  return Astro.redirect('/directory');
+}
+
+const rating = parseFloat(clinic.Rating);
+const fullStars = Math.floor(rating);
+const hasHalfStar = rating % 1 >= 0.5;
+
+// Operating hours
+const hours = [
+  { day: 'Monday', time: clinic.Monday },
+  { day: 'Tuesday', time: clinic.Tuesday },
+  { day: 'Wednesday', time: clinic.Wednesday },
+  { day: 'Thursday', time: clinic.Thursday },
+  { day: 'Friday', time: clinic.Friday },
+  { day: 'Saturday', time: clinic.Saturday },
+  { day: 'Sunday', time: clinic.Sunday },
+];
+
+const reviews = [clinic.Review1, clinic.Review2, clinic.Review3].filter(Boolean);
+---
+
+<Layout 
+  title={`${clinic.Name} - ${clinic.City}, ${clinic.State} | Hyperhidrosis Treatment`}
+  description={`${clinic.Name} in ${clinic.City}, ${clinic.State}. Professional hyperhidrosis treatment with rating ${clinic.Rating}/5. Contact: ${clinic.Phone}`}
+  keywords={`${clinic.Name}, hyperhidrosis treatment ${clinic.City}, excessive sweating ${clinic.State}, dermatology ${clinic.City}`}
+>
+  <!-- Breadcrumb -->
+  <nav class="bg-gray-50 py-4">
+    <div class="container">
+      <div class="flex items-center space-x-2 text-sm text-gray-600">
+        <a href="/" class="hover:text-primary-600">Home</a>
+        <span>›</span>
+        <a href="/directory" class="hover:text-red-600">Directory</a>
+        <span>›</span>
+        <a href={`/directory/${clinic.State.toLowerCase().replace(/\s+/g, '-')}`} class="hover:text-red-600">{clinic.State}</a>
+        <span>›</span>
+        <span class="text-gray-900">{clinic.Name}</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Clinic Header -->
+  <section class="py-12 bg-white">
+    <div class="container">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Info -->
+        <div class="lg:col-span-2">
+          <h1 class="text-4xl font-heading font-bold text-gray-900 mb-4">{clinic.Name}</h1>
+          
+          <!-- Location & Rating -->
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <div class="flex items-center text-gray-600 mb-2 sm:mb-0">
+              <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              </svg>
+              <span>{clinic.City}, {clinic.State}</span>
+            </div>
+            
+            <!-- Rating -->
+            <div class="flex items-center">
+              <div class="flex items-center mr-2">
+                {Array.from({ length: fullStars }, (_, i) => (
+                  <svg key={i} class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+                {hasHalfStar && (
+                  <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77V2z"/>
+                  </svg>
+                )}
+                {Array.from({ length: 5 - fullStars - (hasHalfStar ? 1 : 0) }, (_, i) => (
+                  <svg key={i} class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+              </div>
+              <span class="text-lg font-semibold text-gray-900">{clinic.Rating}</span>
+              <span class="text-gray-500 ml-1">({reviews.length} reviews)</span>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Location & Contact</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <div class="flex items-start mb-3">
+                  <svg class="w-5 h-5 text-gray-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <div>
+                    <div class="font-medium text-gray-900">Address</div>
+                    <a href={clinic.Website} target="_blank" rel="noopener noreferrer" class="text-red-600 hover:text-red-700">Visit Website</a>
+                  </div>
+                </div>
+                
+                {clinic.Phone && (
+                  <div class="flex items-center mb-3">
+                    <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                    </svg>
+                    <div>
+                      <div class="font-medium text-gray-900">Phone</div>
+                      <a href={`tel:${clinic.Phone}`} class="text-primary-600 hover:text-primary-700">{clinic.Phone}</a>
+                    </div>
+                  </div>
+                )}
+
+                {clinic.Website && (
+                  <div class="flex items-center">
+                    <svg class="w-5 h-5 text-gray-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    <div>
+                      <div class="font-medium text-gray-900">Website</div>
+                      <a href={clinic.Website} target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700">Visit Website</a>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <!-- Map placeholder - would integrate with Google Maps -->
+              <div class="bg-gray-200 rounded-lg h-48 flex items-center justify-center">
+                <a 
+                  href={`https://maps.google.com?q=${encodeURIComponent(clinic.Address)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="bg-primary-600 text-white px-6 py-3 rounded-lg hover:bg-primary-700 transition-colors flex items-center"
+                >
+                  <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  Get Directions
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          {clinic.Description && (
+            <div class="mb-8">
+              <h3 class="text-xl font-heading font-semibold text-gray-900 mb-4">About This Practice</h3>
+              <div class="prose prose-gray max-w-none">
+                <p class="text-gray-600 leading-relaxed">{clinic.Description}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+          <!-- Action Buttons -->
+          <div class="bg-white border-2 border-gray-200 rounded-lg p-6 mb-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact This Clinic</h3>
+            <div class="space-y-3">
+              {clinic.Phone && (
+                <a 
+                  href={`tel:${clinic.Phone}`}
+                  class="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 transition-colors font-medium text-center block"
+                >
+                  Call Now
+                </a>
+              )}
+              {clinic.Website && (
+                <a 
+                  href={clinic.Website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="w-full bg-white text-red-600 border-2 border-red-600 py-3 px-4 rounded-lg hover:bg-red-50 transition-colors font-medium text-center block"
+                >
+                  Visit Website
+                </a>
+              )}
+              <a 
+                href={`https://maps.google.com?q=${encodeURIComponent(clinic.Address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                class="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors flex items-center"
+              >
+                Get Directions
+              </a>
+            </div>
+          </div>
+
+          <!-- Hours -->
+          <div class="bg-white border-2 border-gray-200 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Hours of Operation</h3>
+            <div class="space-y-2">
+              {hours.map(({ day, time }) => (
+                <div class="flex justify-between">
+                  <span class="text-gray-600">{day}</span>
+                  <span class="text-gray-900 font-medium">
+                    {time ? time.split(': ')[1] || time : 'Closed'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Reviews -->
+  {reviews.length > 0 && (
+    <section class="py-12 bg-gray-50">
+      <div class="container">
+        <h2 class="text-2xl font-heading font-bold text-gray-900 mb-8">Patient Reviews</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {reviews.map((review, index) => (
+            <div key={index} class="bg-white rounded-lg p-6 shadow-sm">
+              <div class="flex items-center mb-4">
+                {Array.from({ length: 5 }, (_, i) => (
+                  <svg key={i} class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                ))}
+              </div>
+              <p class="text-gray-600 text-sm leading-relaxed">{review}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Related Products -->
+  <section class="py-12 bg-white">
+    <div class="container">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-heading font-bold text-gray-900 mb-4">Complement Your Treatment</h2>
+        <p class="text-gray-600">Enhance your professional treatment with our proven products</p>
+      </div>
+      
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/products" class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium text-center">
+          Shop Sweat Solutions
+        </a>
+        <button id="getDiscountBtn" class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
+          Get 15% Off Code
+        </button>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.getElementById('getDiscountBtn')?.addEventListener('click', () => {
+    document.getElementById('registerBtn')?.click();
+  });
+</script>

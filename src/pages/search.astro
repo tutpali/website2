@@ -1,0 +1,88 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+import ClinicCard from '../components/ClinicCard.astro';
+import { searchClinics } from '../lib/supabase';
+
+const query = Astro.url.searchParams.get('q') || '';
+const clinics = query ? await searchClinics(query) : [];
+---
+
+<Layout 
+  title={`Search Results for "${query}" - Hyperhidrosis Clinics`}
+  description={`Find hyperhidrosis treatment clinics for "${query}". Search results from our comprehensive directory of specialists.`}
+>
+  <!-- Header -->
+  <section class="bg-gradient-to-r from-red-500 to-red-600 text-white py-12">
+    <div class="container">
+      <h1 class="text-4xl font-heading font-bold mb-4">Search Results</h1>
+      {query && (
+        <p class="text-xl mb-6">Showing results for "{query}"</p>
+      )}
+      
+      <!-- Search Form -->
+      <div class="max-w-md">
+        <form action="/search" method="get" class="flex">
+          <input 
+            type="text" 
+            name="q" 
+            value={query}
+            placeholder="Search by city, state, or clinic name..."
+            class="flex-1 px-4 py-3 rounded-l-lg text-gray-900 focus:ring-2 focus:ring-white focus:outline-none"
+          />
+          <button 
+            type="submit"
+            class="bg-white text-red-600 px-6 py-3 rounded-r-lg hover:bg-gray-100 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="py-12">
+    <div class="container">
+      {query ? (
+        <>
+          <div class="mb-8">
+            <p class="text-gray-600">
+              {clinics.length} result{clinics.length !== 1 ? 's' : ''} found for "{query}"
+            </p>
+          </div>
+          
+          {clinics.length > 0 ? (
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {clinics.map((clinic) => (
+                <ClinicCard clinic={clinic} />
+              ))}
+            </div>
+          ) : (
+            <div class="text-center py-12">
+              <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+              <h3 class="text-xl font-semibold text-gray-600 mb-2">No results found</h3>
+              <p class="text-gray-500 mb-4">Try searching with different keywords or check the spelling.</p>
+              <a href="/directory" class="text-red-600 hover:text-red-700 font-medium">
+                Browse all clinics →
+              </a>
+            </div>
+          )}
+        </>
+      ) : (
+        <div class="text-center py-12">
+          <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <h3 class="text-xl font-semibold text-gray-600 mb-2">Enter a search term</h3>
+          <p class="text-gray-500">Search for clinics by name, city, or state</p>
+        </div>
+      )}
+    </div>
+  </section>
+</Layout>

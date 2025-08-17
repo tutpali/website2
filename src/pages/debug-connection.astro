@@ -1,0 +1,131 @@
+---
+export const prerender = false;
+
+import { supabase } from '../lib/supabase';
+
+// Test basic connection
+let connectionTest = null;
+let envVars = null;
+let rawError = null;
+
+try {
+  // Check environment variables
+  envVars = {
+    url: import.meta.env.VITE_SUPABASE_URL ? 'Present' : 'Missing',
+    key: import.meta.env.VITE_SUPABASE_ANON_KEY ? 'Present' : 'Missing',
+    urlValue: import.meta.env.VITE_SUPABASE_URL?.substring(0, 30) + '...',
+    keyValue: import.meta.env.VITE_SUPABASE_ANON_KEY?.substring(0, 30) + '...'
+  };
+
+  // Test simple connection
+  const { data, error } = await supabase
+    .from('clinics')
+    .select('count', { count: 'exact' });
+
+  connectionTest = { data, error, count: data };
+
+} catch (error) {
+  rawError = error;
+}
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Connection Debug</title>
+  <style>
+    body { 
+      font-family: monospace; 
+      padding: 20px; 
+      background: #f0f0f0;
+      line-height: 1.5;
+    }
+    .section { 
+      margin: 20px 0; 
+      padding: 20px; 
+      border: 3px solid #333; 
+      background: white;
+      border-radius: 10px;
+    }
+    .error { color: red; font-weight: bold; background: #ffe6e6; padding: 10px; border-radius: 5px; }
+    .success { color: green; font-weight: bold; background: #e6ffe6; padding: 10px; border-radius: 5px; }
+    .warning { color: orange; font-weight: bold; background: #fff3e6; padding: 10px; border-radius: 5px; }
+    pre { 
+      background: #f8f8f8; 
+      padding: 15px; 
+      overflow-x: auto; 
+      border: 2px solid #ddd;
+      border-radius: 8px;
+    }
+    h1 { 
+      color: #333; 
+      border-bottom: 4px solid #333; 
+      padding-bottom: 15px;
+    }
+    h2 { 
+      color: #666; 
+      border-bottom: 2px solid #666; 
+      padding-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔌 Supabase Connection Debug</h1>
+  
+  <div class="section">
+    <h2>🔑 Environment Variables</h2>
+    {envVars ? (
+      <div>
+        <p>VITE_SUPABASE_URL: <strong>{envVars.url}</strong></p>
+        <p>VITE_SUPABASE_ANON_KEY: <strong>{envVars.key}</strong></p>
+        {envVars.url === 'Present' && (
+          <p>URL Preview: <code>{envVars.urlValue}</code></p>
+        )}
+        {envVars.key === 'Present' && (
+          <p>Key Preview: <code>{envVars.keyValue}</code></p>
+        )}
+      </div>
+    ) : (
+      <div class="error">❌ Could not check environment variables</div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>🔌 Connection Test</h2>
+    {rawError ? (
+      <div class="error">❌ Raw Error: {rawError.message}</div>
+    ) : connectionTest?.error ? (
+      <div class="error">❌ Supabase Error: {connectionTest.error.message}</div>
+    ) : (
+      <div class="success">✅ Connection successful!</div>
+    )}
+    
+    {connectionTest && (
+      <div>
+        <h3>Connection Details:</h3>
+        <pre>{JSON.stringify(connectionTest, null, 2)}</pre>
+      </div>
+    )}
+  </div>
+
+  <div class="section">
+    <h2>🔧 Troubleshooting</h2>
+    <div class="warning">
+      <h3>If you see connection errors:</h3>
+      <ol>
+        <li>Check that your .env file has VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY</li>
+        <li>Verify the Supabase URL format (should end with .supabase.co)</li>
+        <li>Ensure the anon key is correct (starts with eyJ)</li>
+        <li>Check if Supabase project is active and accessible</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Navigation</h2>
+    <p>
+      <a href="/" style="color: #007bff; text-decoration: none; font-weight: bold;">← Back to Homepage</a>
+    </p>
+  </div>
+</body>
+</html>

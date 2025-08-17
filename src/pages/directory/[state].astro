@@ -1,0 +1,137 @@
+---
+export const prerender = false;
+
+import Layout from '../../layouts/Layout.astro';
+import ClinicCard from '../../components/ClinicCard.astro';
+import { getClinicsByState, getCitiesInState } from '../../lib/supabase';
+
+const { state } = Astro.params;
+
+if (!state) {
+  return Astro.redirect('/directory');
+}
+
+// Convert URL slug back to proper state name
+const stateName = state.split('-').map(word => 
+  word.charAt(0).toUpperCase() + word.slice(1)
+).join(' ');
+
+const clinics = await getClinicsByState(stateName);
+const cities = await getCitiesInState(stateName);
+
+// If no clinics found, might be invalid state
+if (clinics.length === 0) {
+  return Astro.redirect('/directory');
+}
+---
+
+<Layout 
+  title={`Hyperhidrosis Clinics in ${stateName} - Treatment Specialists`}
+  description={`Find hyperhidrosis treatment specialists in ${stateName}. ${clinics.length} verified clinics offering excessive sweating treatments.`}
+  keywords={`hyperhidrosis ${stateName}, excessive sweating treatment ${stateName}, dermatology ${stateName}, sweat clinics ${stateName}`}
+>
+  <!-- Breadcrumb -->
+  <nav class="bg-gray-50 py-4">
+    <div class="container">
+      <div class="flex items-center space-x-2 text-sm text-gray-600">
+        <a href="/" class="hover:text-primary-600">Home</a>
+        <span>›</span>
+        <a href="/directory" class="hover:text-primary-600">Directory</a>
+        <span>›</span>
+        <span class="text-gray-900">{stateName}</span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <section class="bg-gradient-to-r from-red-500 to-red-600 text-white py-12">
+    <div class="container">
+      <h1 class="text-4xl font-heading font-bold mb-4">Hyperhidrosis Clinics in {stateName}</h1>
+      <p class="text-xl mb-6">{clinics.length} verified specialist{clinics.length !== 1 ? 's' : ''} in {stateName}</p>
+      
+      <!-- Search -->
+      <div class="max-w-md">
+        <form action="/search" method="get" class="flex">
+          <input 
+            type="text" 
+            name="q" 
+            placeholder="Search clinics in {stateName}..."
+            class="flex-1 px-4 py-3 rounded-l-lg text-gray-900 focus:ring-2 focus:ring-white focus:outline-none"
+          />
+          <button 
+            type="submit"
+            class="bg-white text-red-600 px-6 py-3 rounded-r-lg hover:bg-gray-100 transition-colors"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cities in State -->
+  {cities.length > 1 && (
+    <section class="py-12 bg-gray-50">
+      <div class="container">
+        <h2 class="text-2xl font-heading font-bold text-gray-900 mb-6">Browse by City</h2>
+        
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {cities.map(({ city, count }) => (
+            <a 
+              href={`/directory/${state}/${city.toLowerCase().replace(/\s+/g, '-')}`}
+              class="bg-white hover:bg-red-50 border border-gray-200 hover:border-red-300 rounded-lg p-4 text-center transition-all duration-200 group"
+            >
+              <div class="font-semibold text-gray-900 group-hover:text-red-600">{city}</div>
+              <div class="text-sm text-gray-500">{count} clinic{count !== 1 ? 's' : ''}</div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Clinics -->
+  <section class="py-12">
+    <div class="container">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-2xl font-heading font-bold text-gray-900">All Clinics in {stateName}</h2>
+        <div class="text-gray-600">
+          {clinics.length} clinic{clinics.length !== 1 ? 's' : ''} found
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {clinics.map((clinic) => (
+          <ClinicCard clinic={clinic} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-12 bg-red-50">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="text-2xl font-heading font-bold text-gray-900 mb-4">Need Additional Support?</h2>
+        <p class="text-gray-600 mb-6">Complement your professional treatment with proven products</p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/products" class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
+            Shop Sweat Solutions
+          </a>
+          <button id="getDiscountBtn" class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-colors font-medium">
+            Get 15% Off Code
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.getElementById('getDiscountBtn')?.addEventListener('click', () => {
+    document.getElementById('registerBtn')?.click();
+  });
+</script>

@@ -1,0 +1,140 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ProductCard from '../../components/ProductCard.astro';
+import { getProductsByCategory } from '../../lib/products';
+
+const individualProducts = getProductsByCategory('individual');
+const comboPackages = getProductsByCategory('combo');
+---
+
+<Layout 
+  title="Hyperhidrosis Products - Effective Sweat Solutions"
+  description="Shop proven hyperhidrosis products and sweat-blocking solutions. Clinical-strength antiperspirants, natural detox formulas, and combo packages."
+  keywords="hyperhidrosis products, antiperspirant, sweat blocker, excessive sweating solutions, clinical strength deodorant"
+>
+  <!-- Header -->
+  <section class="bg-gradient-to-r from-red-500 to-red-600 text-white py-12">
+    <div class="container">
+      <h1 class="text-4xl font-heading font-bold mb-4">Effective Sweat Solutions</h1>
+      <p class="text-xl mb-6">Clinically proven products to control excessive sweating</p>
+      
+      <!-- Special Offer Banner -->
+      <div class="bg-red-500 text-white rounded-lg p-4 inline-block">
+        <span class="font-semibold">🎉 New customers get 15% off!</span>
+        <button id="getDiscountBtn" class="ml-2 bg-white text-red-500 px-3 py-1 rounded text-sm font-medium hover:bg-gray-100 transition-colors">
+          Get Code
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Individual Products -->
+  <section class="py-16 bg-white">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Individual Products</h2>
+        <p class="text-lg text-gray-600">Targeted solutions for every need</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {individualProducts.map((product) => (
+          <ProductCard product={product} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Combo Packages -->
+  <section class="py-16 bg-gray-50">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Save with Combo Packages</h2>
+        <p class="text-lg text-gray-600">Complete systems for maximum effectiveness</p>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        {comboPackages.map((product) => (
+          <ProductCard product={product} isCombo={true} />
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Choose Our Products -->
+  <section class="py-16 bg-white">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Why Choose Our Products?</h2>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="text-center">
+          <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Clinically Proven</h3>
+          <p class="text-gray-600">All our products are dermatologist tested and clinically proven to reduce excessive sweating.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Gentle & Safe</h3>
+          <p class="text-gray-600">Formulated with skin-friendly ingredients that are gentle yet effective for daily use.</p>
+        </div>
+        
+        <div class="text-center">
+          <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+          <h3 class="text-xl font-heading font-semibold text-gray-900 mb-2">Money-Back Guarantee</h3>
+          <p class="text-gray-600">Not satisfied? Get a full refund within 30 days. We stand behind our products.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ Section -->
+  <section class="py-16 bg-gray-50">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+      </div>
+      
+      <div class="max-w-3xl mx-auto space-y-6">
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">How long does shipping take?</h3>
+          <p class="text-gray-600">We offer free shipping on orders over $25. Most orders arrive within 3-5 business days.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Are these products safe for sensitive skin?</h3>
+          <p class="text-gray-600">Yes, all our products are dermatologist tested and formulated to be gentle on sensitive skin. However, we recommend patch testing before first use.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Can I use these products with medical treatments?</h3>
+          <p class="text-gray-600">Our products complement professional treatments like Botox injections. However, always consult with your doctor before combining treatments.</p>
+        </div>
+        
+        <div class="bg-white rounded-lg p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">How do I apply the discount code?</h3>
+          <p class="text-gray-600">Register for your 15% discount code, then enter it at checkout. The discount will be automatically applied to your order.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  document.getElementById('getDiscountBtn')?.addEventListener('click', () => {
+    document.getElementById('registerBtn')?.click();
+  });
+</script>

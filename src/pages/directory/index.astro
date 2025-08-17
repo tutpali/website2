@@ -1,0 +1,133 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import ClinicCard from '../../components/ClinicCard.astro';
+import { getClinics, getStatesWithClinics, getAllStates } from '../../lib/supabase';
+
+const clinics = await getClinics();
+const states = await getStatesWithClinics();
+const allStates = await getAllStates();
+---
+
+<Layout 
+  title="Hyperhidrosis Clinic Directory - Find Treatment Specialists"
+  description="Comprehensive directory of hyperhidrosis treatment specialists and clinics. Find qualified dermatologists and medical professionals near you."
+  keywords="hyperhidrosis directory, excessive sweating clinics, dermatology specialists, sweat treatment centers"
+>
+  <!-- Header -->
+  <section class="bg-gradient-to-r from-red-500 to-red-600 text-white py-12">
+    <div class="container">
+      <h1 class="text-4xl font-heading font-bold mb-4">Hyperhidrosis Treatment Directory</h1>
+      <p class="text-xl mb-6">Find qualified specialists for excessive sweating treatment</p>
+      
+      <!-- Location Finder -->
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl p-8 shadow-2xl border-4 border-red-200">
+          <h3 class="text-2xl font-bold text-gray-900 mb-8 text-center">🔍 Find Clinics by Location</h3>
+          
+          <!-- Dropdowns -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <div>
+              <label for="stateSelect" class="block text-lg font-bold text-gray-800 mb-4">📍 Select State</label>
+              <select id="stateSelect" class="w-full px-6 py-4 text-lg border-3 border-gray-400 rounded-xl focus:ring-4 focus:ring-red-500 focus:border-red-500 bg-gray-50 text-black">
+                <option value="" class="text-black">Choose a state...</option>
+                {allStates.map(state => (
+                  <option value={state} class="text-black">{state}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label for="citySelect" class="block text-lg font-bold text-gray-800 mb-4">🏙️ Select City</label>
+              <select id="citySelect" class="w-full px-6 py-4 text-lg border-3 border-gray-400 rounded-xl focus:ring-4 focus:ring-red-500 focus:border-red-500 bg-gray-50 text-black" disabled>
+                <option value="" class="text-black">First select a state...</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Find Button -->
+          <button id="findClinicsBtn" class="w-full bg-red-500 text-white py-5 px-8 rounded-xl hover:bg-red-600 transition-all duration-300 font-bold text-xl shadow-lg disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+            🚀 Find Clinics Now
+          </button>
+        </div>
+        
+      </div>
+    </div>
+  </section>
+
+  <!-- Browse by State -->
+  <section class="py-16 bg-white">
+    <div class="container">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl font-heading font-bold text-gray-900 mb-4">Browse Clinics by State</h2>
+        <p class="text-lg text-gray-600">Find specialists in your area</p>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {allStates.map((state) => (
+          <a 
+            href={`/directory/${state.toLowerCase().replace(/\s+/g, '-')}`}
+            class="bg-gray-50 hover:bg-red-50 border border-gray-200 hover:border-red-300 rounded-lg p-4 text-center transition-all duration-200 group"
+          >
+            <div class="font-semibold text-gray-900 group-hover:text-red-600">
+              {state}
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+              Available clinics
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+</Layout>
+
+<script>
+  const stateSelect = document.getElementById('stateSelect') as HTMLSelectElement;
+  const citySelect = document.getElementById('citySelect') as HTMLSelectElement;
+  const findClinicsBtn = document.getElementById('findClinicsBtn') as HTMLButtonElement;
+
+  stateSelect?.addEventListener('change', async () => {
+    const selectedState = stateSelect.value;
+    
+    if (!selectedState) {
+      citySelect.disabled = true;
+      citySelect.innerHTML = '<option value="">First select a state...</option>';
+      findClinicsBtn.disabled = true;
+      return;
+    }
+
+    // Fetch cities for the selected state
+    try {
+      const response = await fetch(`/api/cities?state=${encodeURIComponent(selectedState)}`);
+      const cities = await response.json();
+      
+      citySelect.innerHTML = '<option value="">All cities in ' + selectedState + '</option>';
+      cities.forEach((city: {city: string, count: number}) => {
+        const option = document.createElement('option');
+        option.value = city.city;
+        option.textContent = `${city.city} (${city.count} clinic${city.count !== 1 ? 's' : ''})`;
+        citySelect.appendChild(option);
+      });
+      
+      citySelect.disabled = false;
+      findClinicsBtn.disabled = false;
+    } catch (error) {
+      console.error('Error fetching cities:', error);
+      citySelect.innerHTML = '<option value="">Error loading cities</option>';
+    }
+  });
+
+  findClinicsBtn?.addEventListener('click', () => {
+    const selectedState = stateSelect.value;
+    const selectedCity = citySelect.value;
+    
+    if (selectedState) {
+      const stateSlug = selectedState.toLowerCase().replace(/\s+/g, '-');
+      if (selectedCity) {
+        const citySlug = selectedCity.toLowerCase().replace(/\s+/g, '-');
+        window.location.href = `/directory/${stateSlug}/${citySlug}`;
+      } else {
+        window.location.href = `/directory/${stateSlug}`;
+      }
+    }
+  });
+</script>

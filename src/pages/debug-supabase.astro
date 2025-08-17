@@ -1,0 +1,170 @@
+---
+export const prerender = false;
+
+import { supabase } from '../lib/supabase';
+
+// Get raw data from Supabase
+const { data: rawClinics, error } = await supabase
+  .from('clinics')
+  .select('*')
+  .limit(100); // Limit to first 100 for easier viewing
+
+const { data: allClinics, error: allError } = await supabase
+  .from('clinics')
+  .select('State')
+  .not('State', 'is', null);
+
+// Get unique states from all data
+const allStates = allClinics?.map(clinic => clinic.State) || [];
+const uniqueStates = [...new Set(allStates)];
+
+// Count by state
+const stateCounts = allStates.reduce((acc, state) => {
+  acc[state] = (acc[state] || 0) + 1;
+  return acc;
+}, {});
+
+// Get some sample records for each state
+const stateExamples = {};
+uniqueStates.forEach(state => {
+  const examples = rawClinics?.filter(clinic => clinic.State === state).slice(0, 2) || [];
+  stateExamples[state] = examples;
+});
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Debug - Raw Data Inspection</title>
+  <style>
+    body { 
+      font-family: monospace; 
+      padding: 20px; 
+      background: #f5f5f5;
+      line-height: 1.4;
+    }
+    .section { 
+      margin: 20px 0; 
+      padding: 15px; 
+      border: 2px solid #333; 
+      background: white;
+      border-radius: 8px;
+    }
+    .error { color: red; font-weight: bold; }
+    .success { color: green; font-weight: bold; }
+    pre { 
+      background: #f8f8f8; 
+      padding: 15px; 
+      overflow-x: auto; 
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .state-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin: 10px 0;
+    }
+    .state-card {
+      background: #e8f4fd;
+      padding: 10px;
+      border-radius: 4px;
+      border: 1px solid #b3d9ff;
+    }
+    .highlight { background: yellow; padding: 2px 4px; }
+    h1 { color: #333; border-bottom: 3px solid #333; padding-bottom: 10px; }
+    h2 { color: #666; border-bottom: 1px solid #666; padding-bottom: 5px; }
+    .stats { 
+      background: #e8f5e8; 
+      padding: 15px; 
+      border-radius: 8px; 
+      margin: 15px 0;
+      border: 2px solid #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Supabase Raw Data Debug Inspector</h1>
+  
+  <div class="section">
+    <h2>📊 Connection & Basic Stats</h2>
+    {error ? (
+      <div class="error">❌ Error: {error.message}</div>
+    ) : (
+      <div class="success">✅ Connected successfully</div>
+    )}
+    
+    <div class="stats">
+      <strong>📈 Data Summary:</strong><br>
+      • Total clinic records: <span class="highlight">{allClinics?.length || 0}</span><br>
+      • Sample records fetched: <span class="highlight">{rawClinics?.length || 0}</span><br>
+      • Unique states found: <span class="highlight">{uniqueStates.length}</span><br>
+      • States with data: <span class="highlight">{Object.keys(stateCounts).length}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🗺️ All States Found in Database</h2>
+    <div class="state-grid">
+      {uniqueStates.sort().map(state => (
+        <div class="state-card">
+          <strong>{state}</strong><br>
+          <small>{stateCounts[state]} clinics</small>
+        </div>
+      ))}
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>📋 Raw State Values (First 50)</h2>
+    <pre>{JSON.stringify(allStates.slice(0, 50), null, 2)}</pre>
+  </div>
+
+  <div class="section">
+    <h2>📊 State Distribution</h2>
+    <pre>{JSON.stringify(stateCounts, null, 2)}</pre>
+  </div>
+
+  <div class="section">
+    <h2>🔍 Sample Clinic Records (First 5)</h2>
+    <pre>{JSON.stringify(rawClinics?.slice(0, 5), null, 2)}</pre>
+  </div>
+
+  <div class="section">
+    <h2>📝 Sample Records by State</h2>
+    {Object.entries(stateExamples).slice(0, 10).map(([state, examples]) => (
+      <div style="margin-bottom: 20px;">
+        <h3 style="color: #444; margin: 10px 0 5px 0;">🏛️ {state} (showing {examples.length} samples)</h3>
+        <pre style="max-height: 200px;">{JSON.stringify(examples, null, 2)}</pre>
+      </div>
+    ))}
+  </div>
+
+  <div class="section">
+    <h2>🔧 Data Quality Check</h2>
+    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; border: 1px solid #ffeaa7;">
+      <strong>Potential Issues to Check:</strong><br>
+      • Are there empty/null state values?<br>
+      • Are state names consistent (no typos)?<br>
+      • Are there unexpected characters or formatting?<br>
+      • Do all records have the expected structure?<br><br>
+      
+      <strong>Next Steps:</strong><br>
+      1. Check the raw state values above for inconsistencies<br>
+      2. Look at sample records to verify data structure<br>
+      3. Identify any data cleaning needed<br>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>🔗 Quick Actions</h2>
+    <p>
+      <a href="/" style="color: #007bff; text-decoration: none; font-weight: bold;">← Back to Homepage</a> | 
+      <a href="/directory" style="color: #007bff; text-decoration: none; font-weight: bold;">View Directory</a> | 
+      <a href="/test-supabase" style="color: #007bff; text-decoration: none; font-weight: bold;">Old Test Page</a>
+    </p>
+  </div>
+</body>
+</html>
