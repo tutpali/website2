@@ -1,7 +1,10 @@
 [build]
   command = "npm run build"
   publish = "dist"
-  environment = { NODE_VERSION = "22.18.0" } # Match the Node version from your log
+  environment = { NODE_VERSION = "22.18.0" }
+
+[functions]
+  node_bundler = "esbuild"
 
 [[redirects]]
   from = "/*"
