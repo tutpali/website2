@@ -4,7 +4,7 @@ import { allProducts } from '../lib/products';
 
 export const GET: APIRoute = async () => {
   // Use the current site URL or fallback
-  const baseUrl = import.meta.env.SITE || 'https://hyperhidrosis-directory.netlify.app';
+  const baseUrl = import.meta.env.SITE || 'https://leafy-meringue-5b9072.netlify.app';
   
   // Get dynamic data
   const clinics = await getClinics();
