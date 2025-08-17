@@ -8,5 +8,4 @@ export default defineConfig({
   output: 'server',
   adapter: netlify(),
   integrations: [tailwind()],
-  site: 'https://hyperhidrosis-directory.netlify.app',
-});
+  });
